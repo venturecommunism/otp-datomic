@@ -1,0 +1,2701 @@
+    <!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.11.4">
+    <title>DatomicGenServer.Db – datomic_gen_server v2.2.5</title>
+    <link rel="stylesheet" href="dist/app-1e374caa3d.css" />
+    <script src="dist/sidebar_items.js"></script>
+  </head>
+  <body data-type="modules">
+
+    <div class="main">
+<button class="sidebar-toggle">
+  <i class="icon-menu"></i>
+</button>
+<section class="sidebar">
+  <button class="sidebar-toggle">
+    <i class="icon-menu"></i>
+  </button>
+
+  
+  <a href="api-reference.html" class="sidebar-projectLink">
+    <div class="sidebar-projectDetails">
+      <h1 class="sidebar-projectName">
+        datomic_gen_server
+      </h1>
+      <h2 class="sidebar-projectVersion">
+        v2.2.5
+      </h2>
+    </div>
+    
+  </a>
+
+  <div class="sidebar-search">
+    <i class="icon-search"></i>
+    <input type="text" class="sidebar-searchInput" placeholder="search" autocomplete="off" />
+  </div>
+
+  <ul class="sidebar-listNav">
+    <li><a id="extras-list" href="#full-list">Pages</a></li>
+
+    
+      <li><a id="modules-list" href="#full-list">Modules</a></li>
+    
+
+    
+
+    
+  </ul>
+
+  <ul id="full-list" class="sidebar-fullList"></ul>
+  <div class="sidebar-noResults"></div>
+</section>
+
+<section class="content">
+  <div id="content" class="content-inner">
+
+
+      <h1>
+        <small class="visible-xs">datomic_gen_server v2.2.5</small>
+        DatomicGenServer.Db
+        
+        
+      </h1>
+
+      
+        <section id="moduledoc" class="docstring">
+          <p>DatomicGenServer.Db is a module intended to facilitate the use of Elixir
+data structures instead of edn strings for communicating with Datomic. This
+module maps the DatomicGenServer interface functions in wrappers that accept
+and return Elixir data structures, and also provides slightly more syntactically
+pleasant equivalents for Datomic keys and structures that would otherwise
+need to be represented using a lot of punctuation that isn’t required in Clojure.</p>
+<p>The hexdoc organizes the functions in this module alphabetically; here is a 
+list by topic:</p>
+<h2>Interface functions</h2>
+<pre><code class="elixir">q(server_identifier, exdn, exdn_bindings, options \ [])
+transact(server_identifier, exdn, options \ [])
+pull(server_identifier, pattern_exdn, identifier_exdn, options \ [])
+pull_many(server_identifier, pattern_exdn, identifiers_exdn, options \ [])
+entity(server_identifier, exdn, attr_names \ :all, options \ [])
+load(server_identifier, data_path, options \ [])</code></pre>
+<h2>Datomic Shortcuts</h2>
+<h3>Id/ident</h3>
+<pre><code class="elixir">dbid(db_part)
+id
+ident</code></pre>
+<h3>Transaction creation</h3>
+<pre><code class="elixir">add
+retract
+install_attribute
+alter_attribute
+tx_instant</code></pre>
+<h3>Value types</h3>
+<pre><code class="elixir">value_type
+type_long
+type_keyword
+type_string
+type_boolean
+type_bigint
+type_float
+type_double
+type_bigdec
+type_ref
+type_instant
+type_uuid
+type_uri
+type_bytes</code></pre>
+<h3>Cardinalities</h3>
+<pre><code class="elixir">cardinality
+cardinality_one
+cardinality_many</code></pre>
+<h3>Optional Schema Attributes</h3>
+<pre><code class="elixir">doc
+unique
+unique_value
+unique_identity
+index
+fulltext
+is_component
+no_history</code></pre>
+<h3>Functions</h3>
+<pre><code class="elixir">_fn
+fn_retract_entity
+fn_cas</code></pre>
+<h3>Common partions</h3>
+<pre><code class="elixir">schema_partition
+transaction_partition
+user_partition</code></pre>
+<h3>Query placeholders</h3>
+<pre><code class="elixir">q?(atom)</code></pre>
+<h3>Data sources</h3>
+<pre><code class="elixir">implicit
+inS(placeholder_atom)
+db
+as_of(tx_id)
+since(tx_id)
+history</code></pre>
+<h3>Bindings and find specifications</h3>
+<pre><code class="elixir">single_scalar
+blank
+collection_binding(placeholder_atom)</code></pre>
+<h3>Patterns for use in <code class="inline">pull</code></h3>
+<pre><code class="elixir">star</code></pre>
+<h3>Clauses</h3>
+<pre><code class="elixir">_not(inner_clause)
+_not_join(binding_list, inner_clause_list)
+_or(inner_clauses)
+_or_join(binding_list, inner_clause_list)
+_and(inner_clauses)
+_pull({:symbol, entity_var}, pattern_clauses)
+_expr(function_symbol, remaining_expressions, bindings)</code></pre>
+<h2>Examples</h2>
+<pre><code class="elixir">DatomicGenServer.start(
+  &quot;datomic:mem://test&quot;, 
+  true, 
+  [{:timeout, 20_000}, {:default_message_timeout, 20_000}, {:name, DatomicGenServer}]
+)
+
+data_to_add = [%{ 
+    Db.id =&gt; Db.dbid(Db.schema_partition),
+    Db.ident =&gt; :&quot;person/name&quot;,
+    Db.value_type =&gt; Db.type_string,
+    Db.cardinality =&gt; Db.cardinality_one,
+    Db.doc =&gt; &quot;A person&#39;s name&quot;,
+    Db.install_attribute =&gt; Db.schema_partition
+}]
+Db.transact(DatomicGenServer, data_to_add)
+
+# =&gt; {:ok, %DatomicGenServer.Db.DatomicTransaction{
+        basis_t_before: 1001,   
+        basis_t_after: 1002, 
+        retracted_datoms: [],
+        added_datoms: [
+          %DatomicGenServer.Db.Datom{a: 50, added: true, e: 13194139534314, tx: 13194139534314, 
+              v: %Calendar.DateTime{abbr: &quot;UTC&quot;, day: 15, hour: 3, min: 20, month: 2, sec: 1, std_off: 0, 
+                                    timezone: &quot;Etc/UTC&quot;, usec: 746000, utc_off: 0, year: 2016}},
+          %DatomicGenServer.Db.Datom{a: 41, added: true, e: 65, tx: 13194139534314, v: 35},
+          %DatomicGenServer.Db.Datom{a: 62, added: true, e: 65, tx: 13194139534314, v: &quot;A person&#39;s name&quot;},
+          %DatomicGenServer.Db.Datom{a: 10, added: true, e: 65, tx: 13194139534314, v: :&quot;person/name&quot;},
+          %DatomicGenServer.Db.Datom{a: 40, added: true, e: 65, tx: 13194139534314, v: 23},
+          %DatomicGenServer.Db.Datom{a: 13, added: true, e: 0, tx: 13194139534314, v: 65}],
+        tempids: %{-9223367638809264706 =&gt; 65}}}
+
+query = [:find, Db.q?(:c), :where, [Db.q?(:c), Db.doc, &quot;A person&#39;s name&quot;]]
+Db.q(DatomicGenServer, query)
+
+#=&gt; {:ok, #MapSet&lt;[&#39;A&#39;]&gt;}  # ASCII representation of ID 65</code></pre>
+
+        </section>
+      
+
+      
+        <section id="summary" class="details-list">
+          <h1 class="section-heading">
+            <a class="hover-link" href="#summary">
+              <i class="icon-link"></i>
+            </a>
+            Summary
+          </h1>
+          
+  <div class="summary-types summary">
+    <h2>
+      <a href="#types">Types</a>
+    </h2>
+    <div class="summary-row">
+  <div class="summary-signature">
+    <a href="#t:datom_map/0">datom_map()</a>
+  </div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#t:query_option/0">query_option()</a>
+  </div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#t:transaction_result/0">transaction_result()</a>
+  </div>
+  
+</div>
+
+  </div>
+
+
+          
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+    <div class="summary-row">
+  <div class="summary-signature">
+    <a href="#_and/1">_and(inner_clauses)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for creating an <code class="inline">and</code> clause</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#_expr/3">_expr(function_symbol, remaining_expressions, bindings \\ [])</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for creating a Datomic expression clause. Note that this
+is <em>not</em> the same as a simple Clojure expression inside parentheses</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#_fn/0">_fn()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/fn&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#_not/1">_not(inner_clause)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for creating a <code class="inline">not</code> clause</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#_not_join/2">_not_join(binding_list, inner_clause_list)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for creating a <code class="inline">not-join</code> clause</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#_or/1">_or(inner_clauses)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for creating an <code class="inline">or</code> clause</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#_or_join/2">_or_join(binding_list, inner_clause_list)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for creating an <code class="inline">or-join</code> clause</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#_pull/2">_pull(arg, pattern_clauses)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for creating a Datomic pull expression for use in a :find
+clause. Note that this is not the function to use if you want to call the
+Datomic <code class="inline">pull</code> API function</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#add/0">add()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/add&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#alter_attribute/0">alter_attribute()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.alter/attribute&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#as_of/1">as_of(tx_id)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience function to allow passing a call to the Datomic <code class="inline">as-of</code> API function
+when creating data source bindings to a query or transaction</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#blank/0">blank()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for the blank binding <code class="inline">_</code> as used, for example, in: 
+<code class="inline">[:find ?x :where [_ :likes ?x]]</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#cardinality/0">cardinality()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/cardinality&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#cardinality_many/0">cardinality_many()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.cardinality/many&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#cardinality_one/0">cardinality_one()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.cardinality/one&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#collection_binding/1">collection_binding(placeholder_atom)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for collection binding find specification <code class="inline">...</code>
+as used, for example, in: <code class="inline">[:find ?e in $ [?a ...] :where [?e age ?a] ]</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#db/0">db()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut to allow you to pass the current database in the data source
+bindings to a query or transaction</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#dbid/1">dbid(db_part)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience function that generates <code class="inline">#db/id[ &lt;partition&gt; ]</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#doc/0">doc()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/doc&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#entity/4">entity(server_identifier, exdn, attr_names \\ :all, options \\ [])</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Issues an <code class="inline">entity</code> call to that is passed to the Datomic <code class="inline">entity</code> API function</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#fn_cas/0">fn_cas()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.fn/cas&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#fn_retract_entity/0">fn_retract_entity()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.fn/retractEntity&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#fulltext/0">fulltext()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/fulltext&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#history/0">history()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut to allw passing a call to the Datomic <code class="inline">history</code> API function
+when creating data source bindings to a query or transaction</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#id/0">id()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/id&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#ident/0">ident()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/ident&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#implicit/0">implicit()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for the implicit data source <code class="inline">$</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#inS/1">inS(placeholder_atom)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience function to generate Datomic data source specifications—i.e., 
+symbols prefixed by a dollar sign</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#index/0">index()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/index&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#install_attribute/0">install_attribute()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.install/_attribute&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#is_component/0">is_component()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/isComponent&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#load/3">load(server_identifier, data_path, options \\ [])</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Issues a call to the Clojure net.phobot.datomic/seed library to load data into 
+a database using data files in edn format. The database is not dropped, 
+recreated, or migrated before loading</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#no_history/0">no_history()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/noHistory&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#pull/4">pull(server_identifier, pattern_exdn, identifier_exdn, options \\ [])</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Issues a <code class="inline">pull</code> call to that is passed to the Datomic <code class="inline">pull</code> API function</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#pull_many/4">pull_many(server_identifier, pattern_exdn, identifier_exdns, options \\ [])</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Issues a <code class="inline">pull-many</code> call to that is passed to the Datomic <code class="inline">pull-many</code> API function</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#q/4">q(server_identifier, exdn, exdn_bindings \\ [], options \\ [])</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Queries a DatomicGenServer using a query formulated as an Elixir list.
+This query is translated to an edn string which is then passed to the Datomic 
+<code class="inline">q</code> API function</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#q?/1">q?(placeholder_atom)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience function to generate Datomic query placeholders—i.e., 
+symbols prefixed by a question mark</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#retract/0">retract()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/retract&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#schema_partition/0">schema_partition()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.part/db&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#since/1">since(tx_id)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience function to allow passing a call to the Datomic <code class="inline">since</code> API function
+when creating data source bindings to a query or transaction</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#single_scalar/0">single_scalar()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for the single scalar find specification <code class="inline">.</code>
+as used, for example, in: <code class="inline">[:find ?e . :where [?e age 42] ]</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#star/0">star()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for the star pattern used in <code class="inline">pull</code> (i.e., <code class="inline">[*]</code>)</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#transact/3">transact(server_identifier, exdn, options \\ [])</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Issues a transaction against a DatomicGenServer using a transaction 
+formulated as an Elixir list of maps. This transaction is translated to an edn
+string which is then passed to the Datomic <code class="inline">transact</code> API function</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#transaction_partition/0">transaction_partition()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.part/tx&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#tx_instant/0">tx_instant()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/txInstant&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#type_bigdec/0">type_bigdec()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.type/bigdec&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#type_bigint/0">type_bigint()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.type/bigint&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#type_boolean/0">type_boolean()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.type/boolean&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#type_bytes/0">type_bytes()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.type/bytes&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#type_double/0">type_double()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.type/double&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#type_float/0">type_float()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.type/float&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#type_instant/0">type_instant()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.type/instant&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#type_keyword/0">type_keyword()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.type/keyword&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#type_long/0">type_long()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.type/long&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#type_ref/0">type_ref()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.type/ref&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#type_string/0">type_string()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.type/string&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#type_uri/0">type_uri()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.type/uri&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#type_uuid/0">type_uuid()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.type/uuid&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#unique/0">unique()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/unique&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#unique_identity/0">unique_identity()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.unique/identity&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#unique_value/0">unique_value()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.unique/value&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#user_partition/0">user_partition()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db.part/user&quot;</code></p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#value_type/0">value_type()</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Convenience shortcut for <code class="inline">:&quot;db/valueType&quot;</code></p>
+</div>
+  
+</div>
+
+  </div>
+
+
+          
+
+          
+
+        </section>
+      
+
+      
+        <section id="types" class="types details-list">
+          <h1 class="section-heading">
+            <a class="hover-link" href="#types">
+              <i class="icon-link"></i>
+            </a>
+            Types
+          </h1>
+          <div class="types-list">
+            <div id="t:datom_map/0" class="type-detail">
+  <pre><code class="elixir"><a href="#t:datom_map/0">datom_map</a> :: %{e: integer, a: atom, v: term, tx: integer, added: boolean}</code></pre>
+  
+</div>
+<div id="t:query_option/0" class="type-detail">
+  <pre><code class="elixir"><a href="#t:query_option/0">query_option</a> ::
+  <a href="DatomicGenServer.html#t:send_option/0">DatomicGenServer.send_option</a> |
+  {:response_converter, Exdn.converter} |
+  {:edn_tag_handlers, [{atom, Exdn.handler}, ...]}</code></pre>
+  
+</div>
+<div id="t:transaction_result/0" class="type-detail">
+  <pre><code class="elixir"><a href="#t:transaction_result/0">transaction_result</a> :: %{"db-before": %{"basis-t": integer}, "db-after": %{"basis-t": integer}, "tx-data": [<a href="#t:datom_map/0">datom_map</a>], tempids: %{integer => integer}}</code></pre>
+  
+</div>
+
+          </div>
+        </section>
+      
+
+      
+        <section id="functions" class="details-list">
+          <h1 class="section-heading">
+            <a class="hover-link" href="#functions">
+              <i class="icon-link"></i>
+            </a>
+            Functions
+          </h1>
+          <div class="detail" id="_and/1">
+  <div class="detail-header">
+    <a href="#_and/1" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">_and(inner_clauses)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">_and([Exdn.exdn]) :: {:list, [Exdn.exdn]}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for creating an <code class="inline">and</code> clause.</p>
+<p>Note that in Datomic, <code class="inline">and</code> clauses are only for use inside <code class="inline">or</code> clauses; <code class="inline">and</code> 
+is the default otherwise.</p>
+<p>In Exdn, Clojure lists are represented as tuples with the tag <code class="inline">:list</code>, so this 
+function allows us not to have to sprinkle that syntax all over the place.</p>
+<h2>Example</h2>
+<pre><code class="elixir">Db._and([
+    [Db.q?(:org), :&quot;organization/ngo&quot; true],
+    [Db.q?(:org), :&quot;organization/country&quot; :&quot;country/france&quot;]
+])</code></pre>
+<p>sends the following to Datomic:</p>
+<pre><code class="elixir">(and [?org :organization/ngo true]
+     [?org :organization/country :country/france])</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="_expr/3">
+  <div class="detail-header">
+    <a href="#_expr/3" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">_expr(function_symbol, remaining_expressions, bindings \\ [])</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">_expr(atom, [Exdn.exdn], [Exdn.exdn]) :: [{:list, [Exdn.exdn]}]</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for creating a Datomic expression clause. Note that this
+is <em>not</em> the same as a simple Clojure expression inside parentheses.</p>
+<p>An expression clause allows arbitrary Java or Clojure functions to be used 
+inside of Datalog queries; they are either of form <code class="inline">[(predicate ...)]</code> or 
+<code class="inline">[(function ...) bindings]</code>. An expression clause is thus a Clojure list inside 
+a vector.</p>
+<p>In Exdn, Clojure lists are represented as tuples with the tag <code class="inline">:list</code>, so this 
+function allows us not to have to sprinkle that syntax all over the place.</p>
+
+  </section>
+</div>
+<div class="detail" id="_fn/0">
+  <div class="detail-header">
+    <a href="#_fn/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">_fn()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">_fn :: :"db/fn"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/fn&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="_not/1">
+  <div class="detail-header">
+    <a href="#_not/1" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">_not(inner_clause)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">_not([Exdn.exdn]) :: {:list, [Exdn.exdn]}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for creating a <code class="inline">not</code> clause.</p>
+<p>In Exdn, Clojure lists are represented as tuples with the tag <code class="inline">:list</code>, so this 
+allows us not to have to sprinkle that syntax all over the place.</p>
+<h2>Example</h2>
+<pre><code class="elixir">Db._not([Db.q?(:eid), :&quot;person/age&quot; 13])</code></pre>
+<p>sends the following to Datomic:</p>
+<pre><code class="elixir">(not [?eid :person/age 13])</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="_not_join/2">
+  <div class="detail-header">
+    <a href="#_not_join/2" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">_not_join(binding_list, inner_clause_list)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">_not_join([{:symbol, atom}, ...], [Exdn.exdn]) :: {:list, [Exdn.exdn]}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for creating a <code class="inline">not-join</code> clause.</p>
+<p>In Exdn, Clojure lists are represented as tuples with the tag <code class="inline">:list</code>, so this 
+function allows us not to have to sprinkle that syntax all over the place.</p>
+<h2>Example</h2>
+<pre><code class="elixir">Db._not_join(
+  [ Db.q?(:employer) ],
+  [ [Db.q?(:employer), :&quot;business/employee&quot; Db.q?(:person)],
+    [Db.q?(:employer), :&quot;business/nonprofit&quot; true]
+  ]
+)</code></pre>
+<p>sends the following to Datomic:</p>
+<pre><code class="elixir">(not-join [?employer]
+       [?employer :business/employee ?person]
+       [?employer :business/nonprofit true])</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="_or/1">
+  <div class="detail-header">
+    <a href="#_or/1" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">_or(inner_clauses)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">_or([Exdn.exdn]) :: {:list, [Exdn.exdn]}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for creating an <code class="inline">or</code> clause.</p>
+<p>In Exdn, Clojure lists are represented as tuples with the tag <code class="inline">:list</code>, so this 
+function allows us not to have to sprinkle that syntax all over the place.</p>
+<h2>Example</h2>
+<pre><code class="elixir">Db._or([
+    [Db.q?(:org), :&quot;business/nonprofit&quot; true],
+    [Db.q?(:org), :&quot;organization/ngo&quot; true]
+])</code></pre>
+<p>sends the following to Datomic:</p>
+<pre><code class="elixir">(or [?org :business/nonprofit true]
+    [?org :organization/ngo true])</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="_or_join/2">
+  <div class="detail-header">
+    <a href="#_or_join/2" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">_or_join(binding_list, inner_clause_list)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">_or_join([{:symbol, atom}, ...], [Exdn.exdn]) :: {:list, [Exdn.exdn]}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for creating an <code class="inline">or-join</code> clause.</p>
+<p>The first parameter to this function should be a list of bindings; the second
+the list of clauses.</p>
+<p>In Exdn, Clojure lists are represented as tuples with the tag <code class="inline">:list</code>, so this 
+function allows us not to have to sprinkle that syntax all over the place.</p>
+<h2>Example</h2>
+<pre><code class="elixir">Db._or_join(
+  [ Db.q?(:person) ],
+  [ Db._and([
+      [Db.q?(:employer), :&quot;business/employee&quot;, Db.q?(:person)],
+      [Db.q?(:employer), :&quot;business/nonprofit&quot;, true]
+    ]),
+    [Db.q?(:person), :&quot;person/age&quot;, 65]
+  ]
+)</code></pre>
+<p>sends the following to Datomic:</p>
+<pre><code class="elixir">(or-join [?person]
+       (and [?employer :business/employee ?person]
+            [?employer :business/nonprofit true])
+       [?person :person/age 65])</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="_pull/2">
+  <div class="detail-header">
+    <a href="#_pull/2" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">_pull(arg, pattern_clauses)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">_pull({:symbol, atom}, [Exdn.exdn]) :: {:list, [Exdn.exdn]}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for creating a Datomic pull expression for use in a :find
+clause. Note that this is not the function to use if you want to call the
+Datomic <code class="inline">pull</code> API function.</p>
+<p>In Exdn, Clojure lists are represented as tuples with the tag <code class="inline">:list</code>, so this 
+function allows us not to have to sprinkle that syntax all over the place.</p>
+<h2>Example</h2>
+<pre><code class="elixir">Db._pull(Db.q?(:e), [:&quot;person/address&quot;])</code></pre>
+<p>sends the following to Datomic:</p>
+<pre><code class="elixir">(pull ?e [:person/address])</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="add/0">
+  <div class="detail-header">
+    <a href="#add/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">add()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">add :: :"db/add"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/add&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="alter_attribute/0">
+  <div class="detail-header">
+    <a href="#alter_attribute/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">alter_attribute()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">alter_attribute :: :"db.alter/attribute"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.alter/attribute&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="as_of/1">
+  <div class="detail-header">
+    <a href="#as_of/1" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">as_of(tx_id)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">as_of(integer) :: {:list, [Exdn.exdn]}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience function to allow passing a call to the Datomic <code class="inline">as-of</code> API function
+when creating data source bindings to a query or transaction. </p>
+<p>Accepts an integer as its argument, representing a transaction number or 
+transaction ID. Dates are not yet supported.</p>
+<h2>Example</h2>
+<pre><code class="elixir">Db.q(DatomicGenServer, 
+      [:find, Db.q?(:c), :in, Db.implicit, Db.q?(:docstring), 
+       :where, [Db.q?(:c), Db.doc, Db.q?(:docstring)]], 
+     [Db.as_of(transaction.basis_t_after), &quot;A person&#39;s address&quot;]
+)</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="blank/0">
+  <div class="detail-header">
+    <a href="#blank/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">blank()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">blank :: {:symbol, :_}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for the blank binding <code class="inline">_</code> as used, for example, in: 
+<code class="inline">[:find ?x :where [_ :likes ?x]]</code></p>
+
+  </section>
+</div>
+<div class="detail" id="cardinality/0">
+  <div class="detail-header">
+    <a href="#cardinality/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">cardinality()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">cardinality :: :"db/cardinality"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/cardinality&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="cardinality_many/0">
+  <div class="detail-header">
+    <a href="#cardinality_many/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">cardinality_many()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">cardinality_many :: :"db.cardinality/many"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.cardinality/many&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="cardinality_one/0">
+  <div class="detail-header">
+    <a href="#cardinality_one/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">cardinality_one()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">cardinality_one :: :"db.cardinality/one"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.cardinality/one&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="collection_binding/1">
+  <div class="detail-header">
+    <a href="#collection_binding/1" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">collection_binding(placeholder_atom)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">collection_binding(atom) :: [{:symbol, atom}, ...]</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for collection binding find specification <code class="inline">...</code>
+as used, for example, in: <code class="inline">[:find ?e in $ [?a ...] :where [?e age ?a] ]</code></p>
+
+  </section>
+</div>
+<div class="detail" id="db/0">
+  <div class="detail-header">
+    <a href="#db/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">db()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">db :: {:symbol, :"datomic_gen_server.peer/*db*"}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut to allow you to pass the current database in the data source
+bindings to a query or transaction.</p>
+<p>This gets bound to the value of the Clojure dynamic variable 
+<code class="inline">datomic_gen_server.peer/*db*</code> inside the peer.</p>
+<p>This value is also used inside functions such as <code class="inline">as_of</code> which take the database
+and return a different database value based on transaction time etc.</p>
+<h2>Example</h2>
+<pre><code class="elixir">Db.q(DatomicGenServer, 
+      [:find, Db.q?(:c), :in, Db.implicit, Db.q?(:docstring), 
+       :where, [Db.q?(:c), Db.doc, Db.q?(:docstring)]], 
+     [Db.db, &quot;A person&#39;s address&quot;]
+)</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="dbid/1">
+  <div class="detail-header">
+    <a href="#dbid/1" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">dbid(db_part)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">dbid(atom) :: {:tag, :"db/id", [atom]}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience function that generates <code class="inline">#db/id[ &lt;partition&gt; ]</code></p>
+
+  </section>
+</div>
+<div class="detail" id="doc/0">
+  <div class="detail-header">
+    <a href="#doc/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">doc()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">doc :: :"db/doc"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/doc&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="entity/4">
+  <div class="detail-header">
+    <a href="#entity/4" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">entity(server_identifier, exdn, attr_names \\ :all, options \\ [])</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">entity(<a href="http://elixir-lang.org/docs/stable/elixir/GenServer.html#t:server/0">GenServer.server</a>, [Exdn.exdn], [atom] | :all, [<a href="#t:query_option/0">query_option</a>]) ::
+  {:ok, term} |
+  {:error, term}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Issues an <code class="inline">entity</code> call to that is passed to the Datomic <code class="inline">entity</code> API function. </p>
+<p>The first parameter to this function is the pid or alias of the GenServer process; 
+the second is the data representing the parameter to be passed to <code class="inline">entity</code> as
+edn: either an entity id, an ident, or a lookup ref. The third parameter is 
+a list of atoms that represent the keys of the attributes you wish to fetch, 
+or <code class="inline">:all</code> if you want all the entity’s attributes. </p>
+<p>The options keyword list for querying functions accepts as options 
+<code class="inline">:response_converter</code> and :edn_tag_handlers, which are supplied to Exdn’s 
+<code class="inline">to_elixir</code> function. With <code class="inline">:response_converter</code> you may choose to supply a 
+function to recursively walk down the edn data tree and convert the data to 
+structs. Care must be taken when doing pattern matches that patterns don’t 
+accidentally match unexpected parts of the tree. (For example, if Datomic 
+results are returned in a list of lists, a pattern that matches inner lists 
+may also match outer ones.)</p>
+<p>Edn tag handlers allow you to customize what is done with edn tags in the 
+response. The default handlers are generally sufficient for data returned 
+from Datomic queries.</p>
+<p>The options keyword list may also include a <code class="inline">:client_timeout</code> option that  
+specifies the milliseconds timeout passed to <code class="inline">GenServer.call</code>, and a  
+<code class="inline">:message_timeout</code> option that specifies how long the GenServer should wait 
+for a response before crashing (overriding the default value set in 
+<code class="inline">DatomicGenServer.start</code> or <code class="inline">DatomicGenServer.start_link</code>). Note that if the 
+<code class="inline">:client_timeout</code> is shorter than the <code class="inline">:message_timeout</code> value, the call will 
+return an error but the server will not crash even if the response message is 
+never returned from the Clojure peer. </p>
+<p>If the client timeout is not supplied, the value is taken from the configured 
+value of <code class="inline">:timeout_on_call</code> in the application environment; if that is not 
+configured, the GenServer default of 5000 is used.</p>
+<p>If the message timeout is not supplied, the default value supplied at startup 
+with the option <code class="inline">:default_message_timeout</code> is used; if this was not specified, 
+the configured value of <code class="inline">:message_wait_until_crash</code> in the application 
+environment is used. If this is also omitted, a value of 5000 is used.</p>
+<h2>Example</h2>
+<pre><code class="elixir">Db.entity(DatomicGenServer, :&quot;person/email&quot;)
+
+# =&gt; {ok, %{ Db.ident =&gt; :&quot;person/email&quot;, 
+             Db.value_type =&gt; Db.type_string, 
+             Db.cardinality =&gt; Db.cardinality_one, 
+             Db.doc =&gt; &quot;A person&#39;s email&quot;}}</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="fn_cas/0">
+  <div class="detail-header">
+    <a href="#fn_cas/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">fn_cas()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">fn_cas :: :"db.fn/cas"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.fn/cas&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="fn_retract_entity/0">
+  <div class="detail-header">
+    <a href="#fn_retract_entity/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">fn_retract_entity()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">fn_retract_entity :: :"db.fn/retractEntity"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.fn/retractEntity&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="fulltext/0">
+  <div class="detail-header">
+    <a href="#fulltext/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">fulltext()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">fulltext :: :"db/fulltext"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/fulltext&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="history/0">
+  <div class="detail-header">
+    <a href="#history/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">history()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">history :: {:list, [Exdn.exdn]}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut to allw passing a call to the Datomic <code class="inline">history</code> API function
+when creating data source bindings to a query or transaction.</p>
+<p>This will become of use when datoms and index-range calls and queries are
+supported.</p>
+
+  </section>
+</div>
+<div class="detail" id="id/0">
+  <div class="detail-header">
+    <a href="#id/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">id()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">id :: :"db/id"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/id&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="ident/0">
+  <div class="detail-header">
+    <a href="#ident/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">ident()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">ident :: :"db/ident"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/ident&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="implicit/0">
+  <div class="detail-header">
+    <a href="#implicit/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">implicit()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">implicit :: {:symbol, :"$"}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for the implicit data source <code class="inline">$</code></p>
+
+  </section>
+</div>
+<div class="detail" id="inS/1">
+  <div class="detail-header">
+    <a href="#inS/1" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">inS(placeholder_atom)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">inS(atom) :: {:symbol, atom}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience function to generate Datomic data source specifications—i.e., 
+symbols prefixed by a dollar sign. </p>
+<p>Accepts an atom as its argument, representing the symbol to which the dollar 
+sign is to be prepended.</p>
+
+  </section>
+</div>
+<div class="detail" id="index/0">
+  <div class="detail-header">
+    <a href="#index/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">index()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">index :: :"db/index"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/index&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="install_attribute/0">
+  <div class="detail-header">
+    <a href="#install_attribute/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">install_attribute()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">install_attribute :: :"db.install/_attribute"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.install/_attribute&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="is_component/0">
+  <div class="detail-header">
+    <a href="#is_component/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">is_component()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">is_component :: :"db/isComponent"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/isComponent&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="load/3">
+  <div class="detail-header">
+    <a href="#load/3" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">load(server_identifier, data_path, options \\ [])</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">load(<a href="http://elixir-lang.org/docs/stable/elixir/GenServer.html#t:server/0">GenServer.server</a>, <a href="http://elixir-lang.org/docs/stable/elixir/String.html#t:t/0">String.t</a>, [<a href="DatomicGenServer.html#t:send_option/0">DatomicGenServer.send_option</a>]) ::
+  {:ok, <a href="DatomicTransaction.html#t:t/0">DatomicTransaction.t</a>} |
+  {:error, term}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Issues a call to the Clojure net.phobot.datomic/seed library to load data into 
+a database using data files in edn format. The database is not dropped, 
+recreated, or migrated before loading.</p>
+<p>The first parameter to this function is the pid or alias of the GenServer process; 
+the second is the path to the directory containing the data files. The data 
+files will be processed in the sort order of their directory. </p>
+<p>Data is loaded in a single transaction. The return value of the function 
+is the result of the Datomic <code class="inline">transact</code> API function call that executed the
+transaction, wrapped in a <a href="DatomicTransaction.html"><code class="inline">DatomicTransaction</code></a> struct.</p>
+<p>Loading data does not use the Clojure Conformity library and is not idempotent.</p>
+<p>The options keyword list may also include a <code class="inline">:client_timeout</code> option that  
+specifies the milliseconds timeout passed to <code class="inline">GenServer.call</code>, and a  
+<code class="inline">:message_timeout</code> option that specifies how long the GenServer should wait 
+for a response before crashing (overriding the default value set in 
+<code class="inline">DatomicGenServer.start</code> or <code class="inline">DatomicGenServer.start_link</code>). Note that if the 
+<code class="inline">:client_timeout</code> is shorter than the <code class="inline">:message_timeout</code> value, the call will 
+return an error but the server will not crash even if the response message is 
+never returned from the Clojure peer. </p>
+<p>If the client timeout is not supplied, the value is taken from the configured 
+value of <code class="inline">:timeout_on_call</code> in the application environment; if that is not 
+configured, the GenServer default of 5000 is used.</p>
+<p>If the message timeout is not supplied, the default value supplied at startup 
+with the option <code class="inline">:default_message_timeout</code> is used; if this was not specified, 
+the configured value of <code class="inline">:message_wait_until_crash</code> in the application 
+environment is used. If this is also omitted, a value of 5000 is used.</p>
+<h2>Example</h2>
+<pre><code class="elixir">data_dir = Path.join [System.cwd(), &quot;seed-data&quot;]
+DatomicGenServer.load(DatomicGenServer, data_dir)
+
+=&gt; {:ok, &quot;{:db-before {:basis-t 1000}, :db-after {:basis-t 1000}, ...</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="no_history/0">
+  <div class="detail-header">
+    <a href="#no_history/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">no_history()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">no_history :: :"db/noHistory"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/noHistory&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="pull/4">
+  <div class="detail-header">
+    <a href="#pull/4" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">pull(server_identifier, pattern_exdn, identifier_exdn, options \\ [])</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">pull(<a href="http://elixir-lang.org/docs/stable/elixir/GenServer.html#t:server/0">GenServer.server</a>, [Exdn.exdn], atom | integer, [<a href="#t:query_option/0">query_option</a>]) ::
+  {:ok, term} |
+  {:error, term}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Issues a <code class="inline">pull</code> call to that is passed to the Datomic <code class="inline">pull</code> API function. </p>
+<p>The first parameter to this function is the pid or alias of the GenServer process; 
+the second is a list representing the pattern that is to be passed to <code class="inline">pull</code>
+as its second parameter, and the third is an entity identifier: either an entity 
+id, an ident, or a lookup ref.</p>
+<p>The options keyword list for querying functions accepts as options 
+<code class="inline">:response_converter</code> and :edn_tag_handlers, which are supplied to Exdn’s 
+<code class="inline">to_elixir</code> function. With <code class="inline">:response_converter</code> you may choose to supply a 
+function to recursively walk down the edn data tree and convert the data to 
+structs. Care must be taken when doing pattern matches that patterns don’t 
+accidentally match unexpected parts of the tree. (For example, if Datomic 
+results are returned in a list of lists, a pattern that matches inner lists 
+may also match outer ones.)</p>
+<p>Edn tag handlers allow you to customize what is done with edn tags in the 
+response. The default handlers are generally sufficient for data returned 
+from Datomic queries.</p>
+<p>The options keyword list may also include a <code class="inline">:client_timeout</code> option that  
+specifies the milliseconds timeout passed to <code class="inline">GenServer.call</code>, and a  
+<code class="inline">:message_timeout</code> option that specifies how long the GenServer should wait 
+for a response before crashing (overriding the default value set in 
+<code class="inline">DatomicGenServer.start</code> or <code class="inline">DatomicGenServer.start_link</code>). Note that if the 
+<code class="inline">:client_timeout</code> is shorter than the <code class="inline">:message_timeout</code> value, the call will 
+return an error but the server will not crash even if the response message is 
+never returned from the Clojure peer. </p>
+<p>If the client timeout is not supplied, the value is taken from the configured 
+value of <code class="inline">:timeout_on_call</code> in the application environment; if that is not 
+configured, the GenServer default of 5000 is used.</p>
+<p>If the message timeout is not supplied, the default value supplied at startup 
+with the option <code class="inline">:default_message_timeout</code> is used; if this was not specified, 
+the configured value of <code class="inline">:message_wait_until_crash</code> in the application 
+environment is used. If this is also omitted, a value of 5000 is used.</p>
+<h2>Example</h2>
+<pre><code class="elixir">Db.pull(DatomicGenServer, Db.star, entity_id)
+
+# =&gt; {ok, %{ Db.ident =&gt; :&quot;person/email&quot;, 
+             Db.value_type =&gt; Db.type_string, 
+             Db.cardinality =&gt; Db.cardinality_one, 
+             Db.doc =&gt; &quot;A person&#39;s email&quot;}}</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="pull_many/4">
+  <div class="detail-header">
+    <a href="#pull_many/4" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">pull_many(server_identifier, pattern_exdn, identifier_exdns, options \\ [])</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">pull_many(<a href="http://elixir-lang.org/docs/stable/elixir/GenServer.html#t:server/0">GenServer.server</a>, [Exdn.exdn], [atom | integer], [<a href="#t:query_option/0">query_option</a>]) ::
+  {:ok, term} |
+  {:error, term}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Issues a <code class="inline">pull-many</code> call to that is passed to the Datomic <code class="inline">pull-many</code> API function. </p>
+<p>The first parameter to this function is the pid or alias of the GenServer process; 
+the second is a list representing the pattern to be passed to <code class="inline">pull-many</code>
+as its second parameter, and the third is a list of entity identifiers, any
+of which may be either an entity id, an ident, or a lookup ref.</p>
+<p>The options keyword list for querying functions accepts as options 
+<code class="inline">:response_converter</code> and :edn_tag_handlers, which are supplied to Exdn’s 
+<code class="inline">to_elixir</code> function. With <code class="inline">:response_converter</code> you may choose to supply a 
+function to recursively walk down the edn data tree and convert the data to 
+structs. Care must be taken when doing pattern matches that patterns don’t 
+accidentally match unexpected parts of the tree. (For example, if Datomic 
+results are returned in a list of lists, a pattern that matches inner lists 
+may also match outer ones.)</p>
+<p>Edn tag handlers allow you to customize what is done with edn tags in the 
+response. The default handlers are generally sufficient for data returned 
+from Datomic queries.</p>
+<p>The options keyword list may also include a <code class="inline">:client_timeout</code> option that  
+specifies the milliseconds timeout passed to <code class="inline">GenServer.call</code>, and a  
+<code class="inline">:message_timeout</code> option that specifies how long the GenServer should wait 
+for a response before crashing (overriding the default value set in 
+<code class="inline">DatomicGenServer.start</code> or <code class="inline">DatomicGenServer.start_link</code>). Note that if the 
+<code class="inline">:client_timeout</code> is shorter than the <code class="inline">:message_timeout</code> value, the call will 
+return an error but the server will not crash even if the response message is 
+never returned from the Clojure peer. </p>
+<p>If the client timeout is not supplied, the value is taken from the configured 
+value of <code class="inline">:timeout_on_call</code> in the application environment; if that is not 
+configured, the GenServer default of 5000 is used.</p>
+<p>If the message timeout is not supplied, the default value supplied at startup 
+with the option <code class="inline">:default_message_timeout</code> is used; if this was not specified, 
+the configured value of <code class="inline">:message_wait_until_crash</code> in the application 
+environment is used. If this is also omitted, a value of 5000 is used.</p>
+<h2>Example</h2>
+<pre><code class="elixir">Db.pull_many(DatomicGenServer, Db.star, [ id_1, id_2 ])
+
+# =&gt; {ok, [%{&quot;db/cardinality&quot;: %{&quot;db/id&quot;: 35}, &quot;db/doc&quot;: &quot;A person&#39;s state&quot;, 
+            &quot;db/id&quot;: 63, &quot;db/ident&quot;: :&quot;person/state&quot;, &quot;db/valueType&quot;: %{&quot;db/id&quot;: 23}}, 
+          %{&quot;db/cardinality&quot;: %{&quot;db/id&quot;: 35}, &quot;db/doc&quot;: &quot;A person&#39;s zip code&quot;, 
+            &quot;db/id&quot;: 64, &quot;db/ident&quot;: :&quot;person/zip&quot;, &quot;db/valueType&quot;: %{&quot;db/id&quot;: 23}}]}</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="q/4">
+  <div class="detail-header">
+    <a href="#q/4" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">q(server_identifier, exdn, exdn_bindings \\ [], options \\ [])</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">q(<a href="http://elixir-lang.org/docs/stable/elixir/GenServer.html#t:server/0">GenServer.server</a>, [Exdn.exdn], [Exdn.exdn], [<a href="#t:query_option/0">query_option</a>]) ::
+  {:ok, term} |
+  {:error, term}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Queries a DatomicGenServer using a query formulated as an Elixir list.
+This query is translated to an edn string which is then passed to the Datomic 
+<code class="inline">q</code> API function. </p>
+<p>The first parameter to this function is the pid or alias of the GenServer process; 
+the second is the query. </p>
+<p>The optional third parameter is a list of bindings for the data sources in the 
+query, passed to the <code class="inline">inputs</code> argument of the Datomic <code class="inline">q</code> function. <strong>IMPORTANT:</strong> 
+These bindings are converted to edn strings which are read back in the Clojure 
+peer and then passed to Clojure <code class="inline">eval</code>. Since any arbitrary Clojure forms that 
+are passed in are evaluated, <strong>you must be particularly careful that the bindings 
+are sanitized</strong> and that you are not passing anything in <code class="inline">{:list, [...]}</code> 
+expressions that you don’t control.</p>
+<p>Bindings may include <code class="inline">datomic_gen_server.peer/*db*</code> for the current database
+(or the <code class="inline">db</code> shortcut below), as well as the forms produced by <code class="inline">as_of</code> and
+<code class="inline">since</code> below. These accept transaction times or transaction IDs.</p>
+<p>The options keyword list for querying functions accepts as options 
+<code class="inline">:response_converter</code> and :edn_tag_handlers, which are supplied to Exdn’s 
+<code class="inline">to_elixir</code> function. With <code class="inline">:response_converter</code> you may choose to supply a 
+function to recursively walk down the edn data tree and convert the data to 
+structs. Care must be taken when doing pattern matches that patterns don’t 
+accidentally match unexpected parts of the tree. (For example, if Datomic 
+results are returned in a list of lists, a pattern that matches inner lists 
+may also match outer ones.)</p>
+<p>Edn tag handlers allow you to customize what is done with edn tags in the 
+response. The default handlers are generally sufficient for data returned 
+from Datomic queries.</p>
+<p>The options keyword list may also include a <code class="inline">:client_timeout</code> option that  
+specifies the milliseconds timeout passed to <code class="inline">GenServer.call</code>, and a  
+<code class="inline">:message_timeout</code> option that specifies how long the GenServer should wait 
+for a response before crashing (overriding the default value set in 
+<code class="inline">DatomicGenServer.start</code> or <code class="inline">DatomicGenServer.start_link</code>). Note that if the 
+<code class="inline">:client_timeout</code> is shorter than the <code class="inline">:message_timeout</code> value, the call will 
+return an error but the server will not crash even if the response message is 
+never returned from the Clojure peer. </p>
+<p>If the client timeout is not supplied, the value is taken from the configured 
+value of <code class="inline">:timeout_on_call</code> in the application environment; if that is not 
+configured, the GenServer default of 5000 is used.</p>
+<p>If the message timeout is not supplied, the default value supplied at startup 
+with the option <code class="inline">:default_message_timeout</code> is used; if this was not specified, 
+the configured value of <code class="inline">:message_wait_until_crash</code> in the application 
+environment is used. If this is also omitted, a value of 5000 is used.</p>
+<h2>Example</h2>
+<pre><code class="elixir">query = [:find, Db.q?(:c), :where, [Db.q?(:c), Db.doc, &quot;A person&#39;s name&quot;]]
+Db.q(DatomicGenServer, query)
+
+#=&gt; {:ok, #MapSet&lt;[&#39;A&#39;]&gt;}  # ASCII representation of ID 65</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="q?/1">
+  <div class="detail-header">
+    <a href="#q?/1" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">q?(placeholder_atom)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">q?(atom) :: {:symbol, atom}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience function to generate Datomic query placeholders—i.e., 
+symbols prefixed by a question mark. </p>
+<p>Accepts an atom as its argument, representing the symbol to which 
+the question mark is to be prepended.</p>
+
+  </section>
+</div>
+<div class="detail" id="retract/0">
+  <div class="detail-header">
+    <a href="#retract/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">retract()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">retract :: :"db/retract"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/retract&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="schema_partition/0">
+  <div class="detail-header">
+    <a href="#schema_partition/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">schema_partition()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">schema_partition :: :"db.part/db"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.part/db&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="since/1">
+  <div class="detail-header">
+    <a href="#since/1" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">since(tx_id)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">since(integer) :: {:list, [Exdn.exdn]}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience function to allow passing a call to the Datomic <code class="inline">since</code> API function
+when creating data source bindings to a query or transaction. </p>
+<p>Accepts an integer as its argument, representing a transaction number or 
+transaction ID. Dates are not yet supported.</p>
+<h2>Example</h2>
+<pre><code class="elixir">Db.q(DatomicGenServer, 
+      [:find, Db.q?(:c), :in, Db.implicit, Db.q?(:docstring), 
+       :where, [Db.q?(:c), Db.doc, Db.q?(:docstring)]], 
+     [Db.since(transaction.basis_t_after), &quot;A person&#39;s address&quot;]
+)</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="single_scalar/0">
+  <div class="detail-header">
+    <a href="#single_scalar/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">single_scalar()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">single_scalar :: {:symbol, :.}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for the single scalar find specification <code class="inline">.</code>
+as used, for example, in: <code class="inline">[:find ?e . :where [?e age 42] ]</code></p>
+
+  </section>
+</div>
+<div class="detail" id="star/0">
+  <div class="detail-header">
+    <a href="#star/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">star()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">star :: [{:symbol, :*}, ...]</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for the star pattern used in <code class="inline">pull</code> (i.e., <code class="inline">[*]</code>).</p>
+
+  </section>
+</div>
+<div class="detail" id="transact/3">
+  <div class="detail-header">
+    <a href="#transact/3" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">transact(server_identifier, exdn, options \\ [])</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">transact(<a href="http://elixir-lang.org/docs/stable/elixir/GenServer.html#t:server/0">GenServer.server</a>, [Exdn.exdn], [<a href="DatomicGenServer.html#t:send_option/0">DatomicGenServer.send_option</a>]) ::
+  {:ok, <a href="DatomicTransaction.html#t:t/0">DatomicTransaction.t</a>} |
+  {:error, term}</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Issues a transaction against a DatomicGenServer using a transaction 
+formulated as an Elixir list of maps. This transaction is translated to an edn
+string which is then passed to the Datomic <code class="inline">transact</code> API function. </p>
+<p>The first parameter to this function is the pid or alias of the GenServer process;  
+the second is the transaction data. </p>
+<p>The options keyword list may also include a <code class="inline">:client_timeout</code> option that  
+specifies the milliseconds timeout passed to <code class="inline">GenServer.call</code>, and a  
+<code class="inline">:message_timeout</code> option that specifies how long the GenServer should wait 
+for a response before crashing (overriding the default value set in 
+<code class="inline">DatomicGenServer.start</code> or <code class="inline">DatomicGenServer.start_link</code>). Note that if the 
+<code class="inline">:client_timeout</code> is shorter than the <code class="inline">:message_timeout</code> value, the call will 
+return an error but the server will not crash even if the response message is 
+never returned from the Clojure peer. </p>
+<p>If the client timeout is not supplied, the value is taken from the configured 
+value of <code class="inline">:timeout_on_call</code> in the application environment; if that is not 
+configured, the GenServer default of 5000 is used.</p>
+<p>If the message timeout is not supplied, the default value supplied at startup 
+with the option <code class="inline">:default_message_timeout</code> is used; if this was not specified, 
+the configured value of <code class="inline">:message_wait_until_crash</code> in the application 
+environment is used. If this is also omitted, a value of 5000 is used.</p>
+<h2>Example</h2>
+<pre><code class="elixir">data_to_add = [%{ 
+    Db.id =&gt; Db.dbid(Db.schema_partition),
+    Db.ident =&gt; :&quot;person/name&quot;,
+    Db.value_type =&gt; Db.type_string,
+    Db.cardinality =&gt; Db.cardinality_one,
+    Db.doc =&gt; &quot;A person&#39;s name&quot;,
+    Db.install_attribute =&gt; Db.schema_partition
+}]
+Db.transact(DatomicGenServer, data_to_add)
+
+# =&gt; {:ok, %DatomicGenServer.Db.DatomicTransaction{
+        basis_t_before: 1001,   
+        basis_t_after: 1002, 
+        retracted_datoms: [],
+        added_datoms: [
+          %DatomicGenServer.Db.Datom{a: 50, added: true, e: 13194139534314, tx: 13194139534314, 
+              v: %Calendar.DateTime{abbr: &quot;UTC&quot;, day: 15, hour: 3, min: 20, month: 2, sec: 1, std_off: 0, 
+                                    timezone: &quot;Etc/UTC&quot;, usec: 746000, utc_off: 0, year: 2016}},
+          %DatomicGenServer.Db.Datom{a: 41, added: true, e: 65, tx: 13194139534314, v: 35},
+          %DatomicGenServer.Db.Datom{a: 62, added: true, e: 65, tx: 13194139534314, v: &quot;A person&#39;s name&quot;},
+          %DatomicGenServer.Db.Datom{a: 10, added: true, e: 65, tx: 13194139534314, v: :&quot;person/name&quot;},
+          %DatomicGenServer.Db.Datom{a: 40, added: true, e: 65, tx: 13194139534314, v: 23},
+          %DatomicGenServer.Db.Datom{a: 13, added: true, e: 0, tx: 13194139534314, v: 65}],
+        tempids: %{-9223367638809264706 =&gt; 65}}}</code></pre>
+
+  </section>
+</div>
+<div class="detail" id="transaction_partition/0">
+  <div class="detail-header">
+    <a href="#transaction_partition/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">transaction_partition()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">transaction_partition :: :"db.part/tx"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.part/tx&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="tx_instant/0">
+  <div class="detail-header">
+    <a href="#tx_instant/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">tx_instant()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">tx_instant :: :"db/txInstant"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/txInstant&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="type_bigdec/0">
+  <div class="detail-header">
+    <a href="#type_bigdec/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">type_bigdec()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">type_bigdec :: :"db.type/bigdec"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.type/bigdec&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="type_bigint/0">
+  <div class="detail-header">
+    <a href="#type_bigint/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">type_bigint()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">type_bigint :: :"db.type/bigint"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.type/bigint&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="type_boolean/0">
+  <div class="detail-header">
+    <a href="#type_boolean/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">type_boolean()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">type_boolean :: :"db.type/boolean"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.type/boolean&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="type_bytes/0">
+  <div class="detail-header">
+    <a href="#type_bytes/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">type_bytes()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">type_bytes :: :"db.type/bytes"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.type/bytes&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="type_double/0">
+  <div class="detail-header">
+    <a href="#type_double/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">type_double()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">type_double :: :"db.type/double"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.type/double&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="type_float/0">
+  <div class="detail-header">
+    <a href="#type_float/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">type_float()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">type_float :: :"db.type/float"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.type/float&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="type_instant/0">
+  <div class="detail-header">
+    <a href="#type_instant/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">type_instant()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">type_instant :: :"db.type/instant"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.type/instant&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="type_keyword/0">
+  <div class="detail-header">
+    <a href="#type_keyword/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">type_keyword()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">type_keyword :: :"db.type/keyword"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.type/keyword&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="type_long/0">
+  <div class="detail-header">
+    <a href="#type_long/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">type_long()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">type_long :: :"db.type/long"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.type/long&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="type_ref/0">
+  <div class="detail-header">
+    <a href="#type_ref/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">type_ref()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">type_ref :: :"db.type/ref"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.type/ref&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="type_string/0">
+  <div class="detail-header">
+    <a href="#type_string/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">type_string()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">type_string :: :"db.type/string"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.type/string&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="type_uri/0">
+  <div class="detail-header">
+    <a href="#type_uri/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">type_uri()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">type_uri :: :"db.type/uri"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.type/uri&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="type_uuid/0">
+  <div class="detail-header">
+    <a href="#type_uuid/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">type_uuid()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">type_uuid :: :"db.type/uuid"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.type/uuid&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="unique/0">
+  <div class="detail-header">
+    <a href="#unique/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">unique()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">unique :: :"db/unique"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/unique&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="unique_identity/0">
+  <div class="detail-header">
+    <a href="#unique_identity/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">unique_identity()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">unique_identity :: :"db.unique/identity"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.unique/identity&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="unique_value/0">
+  <div class="detail-header">
+    <a href="#unique_value/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">unique_value()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">unique_value :: :"db.unique/value"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.unique/value&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="user_partition/0">
+  <div class="detail-header">
+    <a href="#user_partition/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">user_partition()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">user_partition :: :"db.part/user"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db.part/user&quot;</code></p>
+
+  </section>
+</div>
+<div class="detail" id="value_type/0">
+  <div class="detail-header">
+    <a href="#value_type/0" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">value_type()</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">value_type :: :"db/valueType"</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Convenience shortcut for <code class="inline">:&quot;db/valueType&quot;</code></p>
+
+  </section>
+</div>
+
+        </section>
+      
+
+      
+
+      
+        <footer class="footer">
+      <p>
+        <span class="line">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" rel="help" target="_blank">ExDoc</a> (v0.11.4),
+        </span>
+        <span class="line">
+          designed by
+          <a href="https://twitter.com/dignifiedquire" target="_blank" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+          </span>
+      </p>
+      <button class="night-mode-toggle" />
+    </footer>
+  </div>
+</section>
+</div>
+  <script src="dist/app-6d2e071366.js"></script>
+  </body>
+</html>
+

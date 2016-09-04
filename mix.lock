@@ -1,0 +1,13 @@
+%{"calendar": {:hex, :calendar, "0.12.4", "74fecf151c3f3a20bf1a252a4c89c5691dc0110696bb0deba8a851c477600882", [:mix], [{:tzdata, "~> 0.5.6 or ~> 0.1.8", [hex: :tzdata, optional: false]}]},
+  "certifi": {:hex, :certifi, "0.4.0", "a7966efb868b179023618d29a407548f70c52466bf1849b9e8ebd0e34b7ea11f", [:rebar3], []},
+  "dialyxir": {:hex, :dialyxir, "0.3.3", "2f8bb8ab4e17acf4086cae847bd385c0f89296d3e3448dc304c26bfbe4b46cb4", [:mix], []},
+  "earmark": {:hex, :earmark, "0.2.1", "ba6d26ceb16106d069b289df66751734802777a3cbb6787026dd800ffeb850f3", [:mix], []},
+  "erldn": {:hex, :erldn, "1.0.5", "9b01d37c438058ae3945c94f96a8cab42d9989adc267ae2ffd7f3f6e4209f313", [:rebar, :make], []},
+  "ex_doc": {:hex, :ex_doc, "0.11.4", "a064bdb720594c3745b94709b17ffb834fd858b4e0c1f48f37c0d92700759e02", [:mix], [{:earmark, "~> 0.1.17 or ~> 0.2", [hex: :earmark, optional: true]}]},
+  "exdn": {:hex, :exdn, "2.1.2", "68d9f552e675ebb94062dc530b4cab18a363a707c38dbe55b645ab739018519a", [:mix], [{:calendar, "~> 0.12.3", [hex: :calendar, optional: false]}, {:erldn, "~> 1.0.5", [hex: :erldn, optional: false]}]},
+  "hackney": {:hex, :hackney, "1.5.1", "b6afff02ca33b2916897d021f3b28e940cf6de49798227deadad2ce1d883a573", [:rebar3], [{:certifi, "0.4.0", [hex: :certifi, optional: false]}, {:idna, "1.1.0", [hex: :idna, optional: false]}, {:metrics, "1.0.1", [hex: :metrics, optional: false]}, {:mimerl, "1.0.2", [hex: :mimerl, optional: false]}, {:ssl_verify_hostname, "1.0.6", [hex: :ssl_verify_hostname, optional: false]}]},
+  "idna": {:hex, :idna, "1.1.0", "b4315c6da1c37dc8ab1df3ed18796ecd5172c4165fb886f43732ce598d145b50", [:rebar3], []},
+  "metrics": {:hex, :metrics, "1.0.1", "25f094dea2cda98213cecc3aeff09e940299d950904393b2a29d191c346a8486", [:rebar3], []},
+  "mimerl": {:hex, :mimerl, "1.0.2", "993f9b0e084083405ed8252b99460c4f0563e41729ab42d9074fd5e52439be88", [:rebar3], []},
+  "ssl_verify_hostname": {:hex, :ssl_verify_hostname, "1.0.6", "45866d958d9ae51cfe8fef0050ab8054d25cba23ace43b88046092aa2c714645", [:make], []},
+  "tzdata": {:hex, :tzdata, "0.5.6", "d44c59175b8e9a170b3b17d6933820de98a3f0932f3a0615d884b8c20e93a87a", [:mix], [{:hackney, "~> 1.0", [hex: :hackney, optional: false]}]}}
